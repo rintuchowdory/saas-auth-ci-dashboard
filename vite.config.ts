@@ -3,7 +3,16 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import { jsxLocPlugin } from "@builder.io/vite-plugin-jsx-loc";
-import { manusRuntimePlugin } from "vite-plugin-manus-runtime";
+
+// Manus runtime plugin only available in Manus environment
+let manusRuntimePlugin: (() => any) | null = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const m = require("vite-plugin-manus-runtime");
+  manusRuntimePlugin = m.manusRuntimePlugin;
+} catch {
+  // Not available outside Manus — skip
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -14,7 +23,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     jsxLocPlugin(),
-    manusRuntimePlugin(),
+    ...(manusRuntimePlugin ? [manusRuntimePlugin()] : []),
   ],
 
   resolve: {
