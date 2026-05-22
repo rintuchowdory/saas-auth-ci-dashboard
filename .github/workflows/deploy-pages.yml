@@ -1,0 +1,71 @@
+name: Deploy — GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Allow one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    name: Build Frontend for GitHub Pages
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build (GitHub Pages — base path)
+        run: pnpm build
+        env:
+          VITE_APP_TITLE: "SaaS Auth CI Dashboard"
+          VITE_BASE_PATH: "/${{ github.event.repository.name }}"
+          VITE_ANALYTICS_ENDPOINT: ""
+          VITE_ANALYTICS_WEBSITE_ID: ""
+          VITE_APP_ID: "saas-ci-dashboard"
+          VITE_APP_LOGO: ""
+          VITE_FRONTEND_FORGE_API_KEY: ""
+          VITE_FRONTEND_FORGE_API_URL: ""
+          VITE_OAUTH_PORTAL_URL: ""
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/public/
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
