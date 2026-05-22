@@ -23,5 +23,5 @@ async def list_users(
 ):
     if current_user.role != UserRole.admin:
         raise HTTPException(status_code=403, detail="Admin access required")
-    result = await db.execute(select(User).where(User.is_active == True))
+    result = await db.execute(select(User).where(User.is_active))
     return result.scalars().all()
